@@ -7,10 +7,7 @@ Vue.use(Router)
 import Layout from '@/layout'
 
 /* Router Modules */
-import componentsRouter from './modules/components'
-import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
-import nestedRouter from './modules/nested'
 
 /**
  * Note: 路由配置项
@@ -98,6 +95,18 @@ export const asyncRoutes = [
         component: () => import('@/views/order/index'),
         name: 'Order',
         meta: { title: '订单记录', icon: 'tab' }
+      }
+    ]
+  },
+  {
+    path: '/example',
+    component: Layout,
+    children: [
+      {
+        path: 'list',
+        component: () => import('@/views/example/list'),
+        name: 'Example',
+        meta: { title: 'Example', icon: 'tab' }
       }
     ]
   },
