@@ -6,9 +6,6 @@ Vue.use(Router)
 /* Layout */
 import Layout from '@/layout'
 
-/* Router Modules */
-import tableRouter from './modules/table'
-
 /**
  * Note: 路由配置项
  *
@@ -85,31 +82,49 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
-  tableRouter,
+  {
+    path: '/setting',
+    component: Layout,
+    alwaysShow: true,
+    meta: { title: '系统设置', icon: 'example' },
+    redirect: '/setting/user',
+    children: [
+      {
+        path: 'user',
+        component: () => import('@/views/setting/user'),
+        name: '用户管理',
+        meta: { title: '用户管理', icon: 'user' }
+      },
+      {
+        path: '款式类别',
+        component: () => import('@/views/setting/clotheType'),
+        name: '款式类别',
+        meta: { title: '款式类别', icon: 'list' }
+      }
+    ]
+  },
   {
     path: '/order',
     component: Layout,
+    alwaysShow: true,
+    meta: { title: '订单管理', icon: 'list' },
+    redirect: '/order/clothe',
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/order/index'),
-        name: 'Order',
-        meta: { title: '订单记录', icon: 'tab' }
+        path: 'clothe',
+        component: () => import('@/views/order/clothe'),
+        name: '服饰订单',
+        meta: { title: '服饰订单', icon: 'theme' }
+      },
+      {
+        path: 'shoe',
+        component: () => import('@/views/order/shoe'),
+        name: '球鞋订单',
+        meta: { title: '球鞋订单', icon: 'shopping' }
       }
     ]
   },
-  {
-    path: '/example',
-    component: Layout,
-    children: [
-      {
-        path: 'list',
-        component: () => import('@/views/example/list'),
-        name: 'Example',
-        meta: { title: 'Example', icon: 'tab' }
-      }
-    ]
-  },
+
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]
