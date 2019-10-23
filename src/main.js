@@ -18,7 +18,7 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
-
+import Pagination from '@/components/Pagination'
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api
@@ -42,6 +42,9 @@ Object.keys(filters).forEach(key => {
 })
 
 Vue.config.productionTip = false
+
+// 全局组件挂载
+Vue.component('Pagination', Pagination)
 
 new Vue({
   el: '#app',
