@@ -3,10 +3,20 @@ import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.headers.get['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.transformRequest = [function (data) {
+  let src = ''
+  for (let item in data) {
+    src += encodeURIComponent(item) + '=' + encodeURIComponent(data[item]) + '&'
+  }
+  return src
+}]
+
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  // withCredentials: true, // send cookies when cross-domain requests
+  //withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000 // request timeout
 })
 
@@ -15,11 +25,11 @@ service.interceptors.request.use(
   config => {
     // do something before request is sent
 
-    if (store.getters.token) {
+    if (getToken()) {
       // let each request carry token
       // ['X-Token'] is a custom headers key
       // please modify it according to the actual situation
-      config.headers['X-Token'] = getToken()
+      config.headers['token'] = getToken()// 让每个请求携带自定义token 请根据实际情况自行修改
     }
     return config
   },
@@ -27,7 +37,8 @@ service.interceptors.request.use(
     // do something with request error
     console.log(error) // for debug
     return Promise.reject(error)
-  }
+  },
+
 )
 
 // response interceptor
@@ -46,9 +57,9 @@ service.interceptors.response.use(
     const res = response.data
 
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000) {
+    if (res.code !== 1) {
       Message({
-        message: res.message || 'Error',
+        message: res.message,
         type: 'error',
         duration: 5 * 1000
       })
@@ -57,8 +68,8 @@ service.interceptors.response.use(
       if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
         // to re-login
         MessageBox.confirm('登录已过期，请重新登录', 'Confirm logout', {
-          confirmButtonText: 'Re-Login',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: '重新登录',
+          cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
           store.dispatch('user/resetToken').then(() => {

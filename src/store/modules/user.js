@@ -1,4 +1,4 @@
-import { login, logout, getInfo } from '@/api/user'
+import { doLogin, logout, getInfo } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 
@@ -33,8 +33,8 @@ const actions = {
   login({ commit }, userInfo) {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
+      doLogin({ username: username.trim(), password: password }).then(response => {
+        const data = response.data
         commit('SET_TOKEN', data.token)
         setToken(data.token)
         resolve()
@@ -47,24 +47,19 @@ const actions = {
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
+      getInfo().then(response => {
+        const data = response.data
         if (!data) {
-          reject('Verification failed, please Login again.')
+          reject(response.msg)
+        }
+        if (data.roles.length <= 0) {
+          reject('角色异常！')
         }
 
-        const { roles, name, avatar, introduction } = data
-
-        // roles must be a non-empty array
-        if (!roles || roles.length <= 0) {
-          reject('getInfo: roles must be a non-null array!')
-        }
-
-        commit('SET_ROLES', roles)
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        commit('SET_INTRODUCTION', introduction)
+        commit('SET_ROLES', data.roles)
+        commit('SET_NAME', data.nickname)
+        commit('SET_AVATAR', data.headimg)
+        commit('SET_INTRODUCTION', data.nickname)
         resolve(data)
       }).catch(error => {
         reject(error)
@@ -72,14 +67,13 @@ const actions = {
     })
   },
 
-  // user logout
+  // 退出系统
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         commit('SET_TOKEN', '')
         commit('SET_ROLES', [])
         removeToken()
-        resetRouter()
         resolve()
       }).catch(error => {
         reject(error)

@@ -91,18 +91,11 @@ export default {
     // 格式化盈亏
     formatProfit(row) {
       const profit = row.salePrice - row.buyPrice - row.shipFee;
-      if(profit > 0 ) {
-        return "+"+ profit
-      }else{
-        return "-"+ profit
+      if (profit > 0) {
+        return "+" + profit
+      } else {
+        return "-" + profit
       }
-    },
-    // 处理新增
-    handleAdd()
-    {
-      this.$route.push(){}
-
-
     }
   }
 }

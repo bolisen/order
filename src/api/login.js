@@ -1,24 +1,24 @@
 import request from '@/utils/request'
 
-export function login(data) {
+export function doLogin(data) {
   return request({
     url: '/login/doLogin',
     method: 'post',
-    data
+    data: data
   })
 }
 
-export function getInfo(token) {
+// 获取用户详细信息
+export function getInfo() {
   return request({
-    url: '/user/info',
-    method: 'get',
-    params: { token }
+    url: '/login/getInfo',
+    method: 'get'
   })
 }
 
 export function logout() {
   return request({
-    url: '/user/logout',
+    url: '/login/logout',
     method: 'post'
   })
 }

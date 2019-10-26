@@ -7,7 +7,7 @@ import request from '@/utils/request'
  */
 export function fetchList(query) {
   return request({
-    url: '/shoe/list',
+    url: '/shoe/getList',
     method: 'get',
     params: query
   })
