@@ -83,24 +83,30 @@ export const constantRoutes = [
 export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
   {
-    path: '/setting',
+    path: '/system',
     component: Layout,
     alwaysShow: true,
     meta: { title: '系统设置', icon: 'example' },
-    redirect: '/setting/user',
+    redirect: '/system/user',
     children: [
       {
         path: 'user',
-        component: () => import('@/views/setting/user'),
+        component: () => import('@/views/system/user'),
         name: '用户管理',
         meta: { title: '用户管理', icon: 'user' }
       },
       {
-        path: '款式类别',
-        component: () => import('@/views/setting/clotheType'),
-        name: '款式类别',
-        meta: { title: '款式类别', icon: 'list' }
-      }
+        path: 'role',
+        component: () => import('@/views/system/role'),
+        name: '角色管理',
+        meta: { title: '角色管理', icon: 'example' }
+      },
+      {
+        path: 'menu',
+        component: () => import('@/views/system/menu'),
+        name: '菜单管理',
+        meta: { title: '菜单管理', icon: 'user' }
+      },
     ]
   },
   {
@@ -121,6 +127,12 @@ export const asyncRoutes = [
         component: () => import('@/views/order/shoe'),
         name: '球鞋订单',
         meta: { title: '球鞋订单', icon: 'shopping' }
+      },
+      {
+        path: 'brand',
+        component: () => import('@/views/order/brand'),
+        name: '品牌列表',
+        meta: { title: '品牌列表', icon: 'shopping' }
       }
     ]
   },

@@ -25,15 +25,15 @@
   </div>
 </template>
 <script>
-export default {
-  data() {
-    return {
-      total: 0,
-      params: {
-        pageNum: 1,
-        pageSize: 10
+  export default {
+    data() {
+      return {
+        total: 0,
+        params: {
+          pageNum: 1,
+          pageSize: 10
+        }
       }
     }
   }
-}
 </script>

@@ -29,7 +29,7 @@ const mutations = {
 }
 
 const actions = {
-  // user login
+  /** 登录 */
   login({ commit }, userInfo) {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ const actions = {
     })
   },
 
-  // get user info
+  /** 获取用户信息 */
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo().then(response => {
@@ -67,7 +67,7 @@ const actions = {
     })
   },
 
-  // 退出系统
+  /** 退出系统 */
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {

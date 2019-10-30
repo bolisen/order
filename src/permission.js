@@ -48,7 +48,7 @@ router.beforeEach(async(to, from, next) => {
         } catch (error) {
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')
-          Message.error(error || 'Has Error')
+          Message.error(error || '请重新登录')
           next(`/login?redirect=${to.path}`)
           NProgress.done()
         }
@@ -58,10 +58,10 @@ router.beforeEach(async(to, from, next) => {
     /* has no token*/
 
     if (whiteList.indexOf(to.path) !== -1) {
-      // in the free login whitelist, go directly
+      // 在免登录白名单，直接进入
       next()
     } else {
-      // other pages that do not have permission to access are redirected to the login page.
+      // 否则全部重定向到登录页
       next(`/login?redirect=${to.path}`)
       NProgress.done()
     }
