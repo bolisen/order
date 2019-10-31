@@ -13,6 +13,11 @@ export function fetchList(query) {
   })
 }
 
+/**
+ * 新增
+ * @param data
+ * @returns {AxiosPromise}
+ */
 export function addModel(data) {
   return request({
     url: '/brand/add',
