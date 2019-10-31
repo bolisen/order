@@ -25,3 +25,16 @@ export function addModel(data) {
     data: data
   })
 }
+
+/**
+ * 获取一条记录
+ * @param id
+ * @returns {AxiosPromise}
+ */
+export function getModel(id) {
+  return request({
+    url: '/brand/getOne?id=' + id,
+    method: 'get'
+  })
+
+}

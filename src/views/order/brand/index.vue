@@ -5,18 +5,24 @@
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="modelList"  ref="multipleTable" tooltip-effect="dark" style="width: 100%">
+    <el-table :data="modelList" ref="multipleTable" tooltip-effect="dark" style="width: 100%">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
-      <el-table-column prop="imgUrl" label="图片" align="center" />
+      <el-table-column prop="pic" label="图片" align="center">
+        <template slot-scope="scope">
+          <div v-if="scope.row.pic!==null">
+            <img  :src="scope.row.pic" width="40" height="40">
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column prop="name" label="名称" align="center" />
       <el-table-column prop="number" label="货号" align="center" />
-      <el-table-column prop="type" label="类型" align="center" />
+      <el-table-column prop="type" label="类型" align="center" :formatter="formatType" />
       <el-table-column prop="remark" label="备注" align="center" />
-      <el-table-column prop="createTime" label="创建时间" align="center" width="180" />
+      <el-table-column prop="create_time" label="创建时间" align="center" width="180" />
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
-        <template>
-          <el-button size="mini" type="text" icon="el-icon-edit">编辑</el-button>
+        <template slot-scope="scope">
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">编辑</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete">删除</el-button>
         </template>
       </el-table-column>
@@ -77,12 +83,15 @@
 </template>
 
 <script>
-import { fetchList, addModel ,updateModel } from '@/api/brand'
+import { fetchList, getModel, addModel, updateModel } from '@/api/brand'
 export default {
   data() {
     return {
-      modelList: [],
+      // 遮罩层
+      loading: false,
+      // 总条数
       total: 0,
+      // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10
@@ -91,17 +100,21 @@ export default {
       title: '',
       // 是否显示弹出层
       open: false,
+      // 列表
+      modelList: [],
       // 表单参数
       params: {
+        id: '',
         name: '',
         pic: '',
-        number: ''
+        number: '',
+        type: '',
+        remark: ''
       },
       // 表单校验
       rules: {
         name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
         number: [{ required: true, message: '货号不能为空', trigger: 'blur' }],
-        pic: [{ required: true, message: '图片不能为空', trigger: 'blur' }],
         type: [{ required: true, message: '类型不能为空', trigger: 'blur' }]
       },
       // 类型列表
@@ -135,33 +148,31 @@ export default {
   methods: {
     /** 查询列表 */
     getList() {
+      this.loading = true
       fetchList(this.queryParams).then(res => {
+        this.modelList = res.data.rows
+        this.total = res.data.total
+        this.loading = false
       })
     },
     // 格式化平台
-    formatType(row, column) {
-      if (row.shopType === 1) {
-        row.shopType = '毒'
+    formatType(row) {
+      if (row.type === 1) {
+        row.type = '衣服'
       }
-      if (row.shopType === 2) {
-        row.shopType = 'nice'
+      if (row.type === 2) {
+        row.type = '裤子'
       }
-      if (row.shopType === 3) {
-        row.shopType = '绿叉'
+      if (row.type === 3) {
+        row.type = '鞋子'
       }
-      if (row.shopType === 4) {
-        row.shopType = '其他'
+      if (row.type === 4) {
+        row.type = '配饰'
       }
-      return row.shopType
-    },
-    // 格式化盈亏
-    formatProfit(row) {
-      const profit = row.salePrice - row.buyPrice - row.shipFee;
-      if (profit > 0) {
-        return '+' + profit
-      } else {
-        return '-' + profit
+      if (row.type === 5) {
+        row.type = '其他'
       }
+      return row.type
     },
     // 取消按钮
     cancel() {
@@ -171,9 +182,12 @@ export default {
     // 表单重置
     reset() {
       this.params = {
+        id: '',
         name: '',
         pic: '',
-        number: ''
+        number: '',
+        type: '',
+        remark: ''
       }
       this.resetForm('params')
     },
@@ -182,6 +196,15 @@ export default {
       this.reset()
       this.open = true
       this.title = '新增'
+    },
+    /** 编辑按钮操作 */
+    handleUpdate(row) {
+      this.reset()
+      getModel(row.id).then (res =>{
+        this.params = res.data
+        this.open = true
+        this.title = '编辑'
+      })
     },
     /** 处理头像上传 */
     handleAvatarSuccess(res) {
@@ -205,9 +228,18 @@ export default {
     },
     /** 表单提交 */
     submitForm: function() {
-      this.$res['params'].validate(valid => {
+      this.$refs['params'].validate(valid => {
         if (valid) {
-          if (this.params.id != undefined) {
+          if (this.params.id !== undefined) {
+            updateModel(this.params).then( res => {
+              if (res.code === 200) {
+                this.$message.success(res.msg)
+                this.open = false
+                this.getList()
+              } else {
+                this.$message.error(res.msg)
+              }
+            })
           } else {
             addModel(this.params).then( res => {
               if (res.code === 200) {
