@@ -93,7 +93,7 @@
 </template>
 
 <script>
-import { fetchList, getModel, addModel, updateModel, delModel } from '@/api/brand'
+import { listBrand, getModel, addModel, updateModel, delModel } from '@/api/brand'
 export default {
   data() {
     return {
@@ -167,7 +167,7 @@ export default {
     /** 查询列表 */
     getList() {
       this.loading = true
-      fetchList(this.queryParams).then(res => {
+      listBrand(this.queryParams).then(res => {
         this.modelList = res.data.rows
         this.total = res.data.total
         this.loading = false
