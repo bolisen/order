@@ -5,7 +5,7 @@ import request from '@/utils/request'
  * @param query
  * @returns {AxiosPromise}
  */
-export function fetchList(query) {
+export function listBrand(query) {
   return request({
     url: '/brand/getList',
     method: 'get',
