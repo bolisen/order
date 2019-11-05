@@ -3,27 +3,37 @@
     <el-form :inline="true" label-width="68px">
       <el-form-item>
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
+        <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
+
+      <el-select v-model="queryParams.type" placeholder="类型" size="small">
+        <el-option label="全部" value="" />
+        <el-option v-for="item in typeList" :key="item.id" :label="item.label" :value="item.id" />
+      </el-select>
+
+      <el-input v-model="queryParams.keyword" size="small" style="width: 200px" placeholder="名称" @keyup.enter.native="handleQuery" />
+
+      <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
-    <el-table :data="modelList" ref="multipleTable" tooltip-effect="dark" style="width: 100%">
+    <el-table ref="multipleTable" :data="modelList" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" @sort-change="handleSort">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
       <el-table-column prop="pic" label="图片" align="center">
         <template slot-scope="scope">
           <div v-if="scope.row.pic!==null">
-            <img  :src="scope.row.pic" width="40" height="40">
+            <img :src="scope.row.pic" width="40" height="40">
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="名称" align="center" />
+      <el-table-column prop="name" label="名称" align="center" sortable="custom" :sort-change="handleQuery" />
       <el-table-column prop="number" label="货号" align="center" />
-      <el-table-column prop="type" label="类型" align="center" :formatter="formatType" />
+      <el-table-column prop="type" label="类型" align="center" :formatter="formatType" sortable="custom" />
       <el-table-column prop="remark" label="备注" align="center" />
-      <el-table-column prop="create_time" label="创建时间" align="center" width="180" />
+      <el-table-column prop="create_time" label="创建时间" align="center" width="180" sortable="custom" />
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">编辑</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete">删除</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleRemove(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -55,8 +65,8 @@
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
           >
-            <img v-if="params.pic" :src="params.pic" class="avatar" />
-            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            <img v-if="params.pic" :src="params.pic" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon" />
           </el-upload>
           <p>(建议尺寸为700*560,建议大小在2M以下）</p>
         </el-form-item>
@@ -66,8 +76,8 @@
               v-for="item in typeList"
               :key="item.id"
               :label="item.label"
-              :value="item.id">
-            </el-option>
+              :value="item.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -83,7 +93,7 @@
 </template>
 
 <script>
-import { fetchList, getModel, addModel, updateModel } from '@/api/brand'
+import { fetchList, getModel, addModel, updateModel, delModel } from '@/api/brand'
 export default {
   data() {
     return {
@@ -91,10 +101,18 @@ export default {
       loading: false,
       // 总条数
       total: 0,
+      // 复选框id
+      ids: [],
+      // 多选数据
+      multipleSelection: [],
       // 查询参数
       queryParams: {
+        type: '',
+        keyword: '',
         pageNum: 1,
-        pageSize: 10
+        pageSize: 10,
+        sort: '',
+        order: ''
       },
       // 弹出层标题
       title: '',
@@ -200,10 +218,67 @@ export default {
     /** 编辑按钮操作 */
     handleUpdate(row) {
       this.reset()
-      getModel(row.id).then (res =>{
+      getModel(row.id).then(res => {
         this.params = res.data
         this.open = true
         this.title = '编辑'
+      })
+    },
+    /** 删除 */
+    handleRemove(row) {
+      this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        delModel({ id: row.id }).then(res => {
+          if (res.code === 200) {
+            this.getList()
+          }
+          this.$message.success(res.msg)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+
+    // 处理批量删除id选中
+    handleSelectionChange(val) {
+      this.multipleSelection = val
+    },
+    /** 删除全部 */
+    handleRemoveAll() {
+      this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 先清空ids
+        this.ids = []
+        const length = this.multipleSelection.length
+        for (let i = 0; i < length; i++) {
+          this.ids.push(this.multipleSelection[i].id)
+        }
+        if (this.ids.length <= 0) {
+          this.$message.error('请至少选择一条删除！')
+          return
+        }
+        // 数组转字符串
+        const ids = this.ids.join(',')
+        delModel({ id: ids }).then(res => {
+          if (res.code === 200) {
+            this.getList()
+          }
+          this.$message.success(res.msg)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
       })
     },
     /** 处理头像上传 */
@@ -230,8 +305,8 @@ export default {
     submitForm: function() {
       this.$refs['params'].validate(valid => {
         if (valid) {
-          if (this.params.id !== undefined) {
-            updateModel(this.params).then( res => {
+          if (this.params.id) {
+            updateModel(this.params).then(res => {
               if (res.code === 200) {
                 this.$message.success(res.msg)
                 this.open = false
@@ -241,7 +316,7 @@ export default {
               }
             })
           } else {
-            addModel(this.params).then( res => {
+            addModel(this.params).then(res => {
               if (res.code === 200) {
                 this.$message.success(res.msg)
                 this.open = false
@@ -253,6 +328,23 @@ export default {
           }
         }
       })
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1
+      this.getList()
+    },
+    /** 排序 */
+    handleSort(column) {
+      this.queryParams.sort = column.prop
+
+      if (column.order === 'descending') {
+        this.queryParams.order = 'desc'
+      } else {
+        this.queryParams.order = 'asc'
+      }
+      this.queryParams.pageNum = 1
+      this.getList()
     }
   }
 }

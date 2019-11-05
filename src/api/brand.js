@@ -36,5 +36,28 @@ export function getModel(id) {
     url: '/brand/getOne?id=' + id,
     method: 'get'
   })
+}
 
+/**
+ * 更新一条记录
+ * @param data
+ * @returns {AxiosPromise}
+ */
+export function updateModel(data) {
+  return request({
+    url: '/brand/update',
+    method: 'post',
+    data: data
+  })
+}
+
+/**
+ * 删除一条记录
+ */
+export function delModel(data) {
+  return request({
+    url: '/brand/del',
+    method: 'post',
+    data: data
+  })
 }
