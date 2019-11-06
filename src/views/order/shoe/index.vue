@@ -26,7 +26,7 @@
       <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" sortable="custom" />
       <el-table-column prop="ship_fee" label="运费" align="center" width="50" :formatter="formatShipFee" />
       <el-table-column prop="ship_num" label="运单编号" align="center" />
-      <el-table-column prop="sale_time" label="出售时间" align="center" width="180" />
+      <el-table-column prop="sale_time" label="出售时间" align="center" width="180" :formatter="formatSaleTime" />
       <el-table-column prop="money" label="盈亏" align="center" sortable>
         <template slot-scope="scope">
           <span v-if="scope.row.money>0" style="color: #ff4d51"> {{ scope.row.money }}</span>
@@ -182,12 +182,19 @@ export default {
       }
       return row.sale_price
     },
-    // 格式化出售价
+    // 格式化运费
     formatShipFee(row) {
       if (row.ship_fee === '0.00' || row.ship_fee == null) {
         row.ship_fee = '无'
       }
       return row.ship_fee
+    },
+    // 格式化出售时间
+    formatSaleTime(row) {
+      if (row.sale_time === null) {
+        row.sale_time = '无'
+      }
+      return row.sale_time
     },
     // 取消按钮
     cancel() {
