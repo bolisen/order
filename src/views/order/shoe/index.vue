@@ -6,28 +6,28 @@
         <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
 
-      <el-select v-model="queryParams.type" placeholder="类型" size="small" value="">
+      <el-select v-model="queryParams.shop_type" placeholder="类型" size="small" value="">
         <el-option label="全部" value="" />
-        <el-option v-for="item in brandList" :key="item.id" :label="item.name" :value="item.id" />
+        <el-option v-for="item in shopList" :key="item" :label="item" :value="item" />
       </el-select>
 
-      <el-input v-model="queryParams.keyword" size="small" style="width: 200px" placeholder="名称" @keyup.enter.native="handleQuery" />
+      <el-input v-model="queryParams.keyword" size="small" style="width: 200px" placeholder="品牌名称" @keyup.enter.native="handleQuery" />
 
       <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
     <el-table ref="multipleTable" :data="modelList" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" @sort-change="handleSort">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
-      <el-table-column prop="brand_name" label="名称" align="center" />
-      <el-table-column prop="size" label="尺码" align="center" width="50" />
-      <el-table-column prop="shop_type" label="来源平台" align="center" />
-      <el-table-column prop="buy_price" label="入手价" align="center" />
+      <el-table-column prop="name" label="名称" align="center" sortable="custom" />
+      <el-table-column prop="size" label="尺码" align="center" width="50" sortable="custom" />
+      <el-table-column prop="shop_type" label="来源平台" align="center" sortable="custom" />
+      <el-table-column prop="buy_price" label="入手价" align="center" sortable="custom" />
       <el-table-column prop="create_time" label="入手时间" align="center" />
-      <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" />
+      <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" sortable="custom" />
       <el-table-column prop="ship_fee" label="运费" align="center" width="50" :formatter="formatShipFee" />
       <el-table-column prop="ship_num" label="运单编号" align="center" />
       <el-table-column prop="sale_time" label="出售时间" align="center" width="180" />
-      <el-table-column prop="money" label="盈亏" align="center">
+      <el-table-column prop="money" label="盈亏" align="center" sortable>
         <template slot-scope="scope">
           <span v-if="scope.row.money>0" style="color: #ff4d51"> {{ scope.row.money }}</span>
           <span v-else style="color: #86f0cd"> {{ scope.row.money }}</span>
@@ -89,6 +89,9 @@
         <el-form-item label="运费" prop="ship_fee">
           <el-input v-model="params.ship_fee" type="number" placeholder="请输入运费" clearable />
         </el-form-item>
+        <el-form-item label="出售时间" prop="sale_time">
+          <el-date-picker v-model="params.sale_time" type="date" placeholder="选择日期" value-format="timestamp" />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" size="mini" @click="submitForm">确 定</el-button>
@@ -136,7 +139,8 @@ export default {
         buy_price: '',
         sale_price: '',
         ship_num: '',
-        ship_fee: ''
+        ship_fee: '',
+        sale_time: ''
       },
       // 表单校验
       rules: {
@@ -200,7 +204,8 @@ export default {
         buy_price: '',
         sale_price: '',
         ship_num: '',
-        ship_fee: ''
+        ship_fee: '',
+        sale_time: ''
       }
       this.resetForm('params')
     },
@@ -215,6 +220,7 @@ export default {
       this.reset()
       getModel(row.id).then(res => {
         this.params = res.data
+        this.params.sale_time = new Date(this.params.sale_time * 1000)
         this.open = true
         this.title = '编辑'
       })
@@ -311,15 +317,17 @@ export default {
     },
     /** 排序 */
     handleSort(column) {
-      this.queryParams.sort = column.prop
+      if (column.prop !== 'money') {
+        this.queryParams.sort = column.prop
 
-      if (column.order === 'descending') {
-        this.queryParams.order = 'desc'
-      } else {
-        this.queryParams.order = 'asc'
+        if (column.order === 'descending') {
+          this.queryParams.order = 'desc'
+        } else {
+          this.queryParams.order = 'asc'
+        }
+        this.queryParams.pageNum = 1
+        this.getList()
       }
-      this.queryParams.pageNum = 1
-      this.getList()
     }
   }
 }
