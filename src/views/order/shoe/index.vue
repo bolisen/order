@@ -6,7 +6,7 @@
         <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
 
-      <el-select v-model="queryParams.type" placeholder="类型" size="small">
+      <el-select v-model="queryParams.type" placeholder="类型" size="small" value="">
         <el-option label="全部" value="" />
         <el-option v-for="item in brandList" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
@@ -18,16 +18,21 @@
     <el-table ref="multipleTable" :data="modelList" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" @sort-change="handleSort">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
-      <el-table-column prop="name" label="名称" align="center" />
-      <el-table-column prop="clotheTypeId" label="货号" align="center" />
-      <el-table-column prop="Size" label="尺码" align="center" />
-      <el-table-column prop="shopType" label="来源平台" align="center" :formatter="formatType" />
-      <el-table-column prop="buyPrice" label="入手价" align="center" />
-      <el-table-column prop="salePrice" label="出售价" align="center" />
-      <el-table-column prop="shipFee" label="运费" align="center" />
-      <el-table-column prop="shipNum" label="运单编号" align="center" />
-      <el-table-column prop="saleTime" label="出售时间" align="center" width="180" />
-      <el-table-column prop="salePrice" label="盈亏" align="center" />
+      <el-table-column prop="brand_name" label="名称" align="center" />
+      <el-table-column prop="size" label="尺码" align="center" width="50" />
+      <el-table-column prop="shop_type" label="来源平台" align="center" />
+      <el-table-column prop="buy_price" label="入手价" align="center" />
+      <el-table-column prop="create_time" label="入手时间" align="center" />
+      <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" />
+      <el-table-column prop="ship_fee" label="运费" align="center" width="50" :formatter="formatShipFee" />
+      <el-table-column prop="ship_num" label="运单编号" align="center" />
+      <el-table-column prop="sale_time" label="出售时间" align="center" width="180" />
+      <el-table-column prop="money" label="盈亏" align="center">
+        <template slot-scope="scope">
+          <span v-if="scope.row.money>0" style="color: #ff4d51"> {{ scope.row.money }}</span>
+          <span v-else style="color: #86f0cd"> {{ scope.row.money }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">编辑</el-button>
@@ -49,7 +54,7 @@
     <el-dialog :title="title" :visible.sync="open" width="40%">
       <el-form ref="params" :model="params" :rules="rules" label-width="80px">
         <el-form-item label="所属品牌" prop="brand_id">
-          <el-select v-model="params.brand_id" filterable placeholder="请选择">
+          <el-select v-model="params.brand_id" filterable placeholder="请选择" value="">
             <el-option
               v-for="item in brandList"
               :key="item.id"
@@ -59,7 +64,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="购入平台" prop="shop_type">
-          <el-select v-model="params.shop_type" filterable placeholder="请选择">
+          <el-select v-model="params.shop_type" filterable placeholder="请选择" value="">
             <el-option
               v-for="item in shopList"
               :key="item"
@@ -166,24 +171,19 @@ export default {
         this.brandList = res.data.rows
       })
     },
-    // 格式化平台
-    formatType(row) {
-      if (row.type === 1) {
-        row.type = '衣服'
+    // 格式化出售价
+    formatSalePrice(row) {
+      if (row.sale_price === '0.00' || row.sale_price == null) {
+        row.sale_price = '未出售'
       }
-      if (row.type === 2) {
-        row.type = '裤子'
+      return row.sale_price
+    },
+    // 格式化出售价
+    formatShipFee(row) {
+      if (row.ship_fee === '0.00' || row.ship_fee == null) {
+        row.ship_fee = '无'
       }
-      if (row.type === 3) {
-        row.type = '鞋子'
-      }
-      if (row.type === 4) {
-        row.type = '配饰'
-      }
-      if (row.type === 5) {
-        row.type = '其他'
-      }
-      return row.type
+      return row.ship_fee
     },
     // 取消按钮
     cancel() {
