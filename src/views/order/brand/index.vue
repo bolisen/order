@@ -21,7 +21,7 @@
       <el-table-column prop="pic" label="图片" align="center">
         <template slot-scope="scope">
           <div v-if="scope.row.pic!==null">
-            <img :src="scope.row.pic" width="40" height="40">
+            <img :src="scope.row.pic" width="65" height="40">
           </div>
         </template>
       </el-table-column>
