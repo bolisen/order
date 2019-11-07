@@ -19,7 +19,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
       <el-table-column prop="name" label="名称" align="center" sortable="custom" />
-      <el-table-column prop="size" label="尺码" align="center" width="50" sortable="custom" />
+      <el-table-column prop="size" label="尺码" align="center" width="80" sortable="custom" />
       <el-table-column prop="shop_type" label="来源平台" align="center" sortable="custom" />
       <el-table-column prop="buy_price" label="入手价" align="center" sortable="custom" />
       <el-table-column prop="create_time" label="入手时间" align="center" />
@@ -29,8 +29,8 @@
       <el-table-column prop="sale_time" label="出售时间" align="center" width="180" :formatter="formatSaleTime" />
       <el-table-column prop="money" label="盈亏" align="center" sortable>
         <template slot-scope="scope">
-          <span v-if="scope.row.money>0" style="color: #ff4d51"> {{ scope.row.money }}</span>
-          <span v-else style="color: #86f0cd"> {{ scope.row.money }}</span>
+          <span v-if="scope.row.money>0" style="color: #fb0000"> {{ scope.row.money }}</span>
+          <span v-else style="color: #2d891a"> {{ scope.row.money }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
@@ -90,7 +90,7 @@
           <el-input v-model="params.ship_fee" type="number" placeholder="请输入运费" clearable />
         </el-form-item>
         <el-form-item label="出售时间" prop="sale_time">
-          <el-date-picker v-model="params.sale_time" type="date" placeholder="选择日期" value-format="timestamp" />
+          <el-date-picker v-model="params.sale_time" type="date" placeholder="选择日期" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -191,7 +191,7 @@ export default {
     },
     // 格式化出售时间
     formatSaleTime(row) {
-      if (row.sale_time === null) {
+      if (!row.sale_time) {
         row.sale_time = '无'
       }
       return row.sale_time
@@ -227,7 +227,10 @@ export default {
       this.reset()
       getModel(row.id).then(res => {
         this.params = res.data
-        this.params.sale_time = new Date(this.params.sale_time * 1000)
+        // 处理时间
+        if (this.params.sale_time) {
+          this.params.sale_time = new Date(this.params.sale_time * 1000)
+        }
         this.open = true
         this.title = '编辑'
       })
@@ -293,6 +296,9 @@ export default {
     submitForm: function() {
       this.$refs['params'].validate(valid => {
         if (valid) {
+          if (this.params.sale_time) {
+            this.params.sale_time = Date.parse(this.params.sale_time)
+          }
           if (this.params.id) {
             updateModel(this.params).then(res => {
               if (res.code === 200) {

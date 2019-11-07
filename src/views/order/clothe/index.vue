@@ -3,42 +3,109 @@
     <el-form :inline="true" label-width="68px">
       <el-form-item>
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
+        <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
+
+      <el-select v-model="queryParams.shop_type" placeholder="类型" size="small" value="">
+        <el-option label="全部" value="" />
+        <el-option v-for="item in shopList" :key="item" :label="item" :value="item" />
+      </el-select>
+
+      <el-input
+        v-model="queryParams.keyword"
+        size="small"
+        style="width: 200px"
+        placeholder="品牌名称"
+        @keyup.enter.native="handleQuery"
+      />
+
+      <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
     <el-table
       ref="multipleTable"
       :data="modelList"
       tooltip-effect="dark"
       style="width: 100%"
+      @selection-change="handleSelectionChange"
+      @sort-change="handleSort"
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column type="index" label="序号 " width="50" align="center" />
-      <el-table-column prop="name" label="名称" align="center" />
-      <el-table-column prop="clotheTypeId" label="货号" align="center" />
-      <el-table-column prop="Size" label="尺码" align="center" />
-      <el-table-column prop="shopType" label="来源平台" align="center" :formatter="formatType" />
-      <el-table-column prop="buyPrice" label="入手价" align="center" />
-      <el-table-column prop="salePrice" label="出售价" align="center" />
-      <el-table-column prop="shipFee" label="运费" align="center" />
-      <el-table-column prop="shipNum" label="运单编号" align="center" />
-      <el-table-column prop="saleTime" label="出售时间" align="center" width="180" />
-      <el-table-column prop="salePrice" label="盈亏" align="center" :formatter="formatProfit" />
+      <el-table-column prop="name" label="名称" align="center" sortable="custom" />
+      <el-table-column prop="size" label="尺码" align="center" width="80" sortable="custom" />
+      <el-table-column prop="shop_type" label="来源平台" align="center" sortable="custom" />
+      <el-table-column prop="buy_price" label="入手价" align="center" sortable="custom" />
+      <el-table-column prop="create_time" label="入手时间" align="center" />
+      <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" sortable="custom" />
+      <el-table-column prop="ship_fee" label="运费" align="center" width="50" :formatter="formatShipFee" />
+      <el-table-column prop="ship_num" label="运单编号" align="center" />
+      <el-table-column prop="sale_time" label="出售时间" align="center" width="180" :formatter="formatSaleTime" />
+      <el-table-column prop="money" label="盈亏" align="center" sortable>
+        <template slot-scope="scope">
+          <span v-if="scope.row.money>0" style="color: #fb0000"> {{ scope.row.money }}</span>
+          <span v-else style="color: #2d891a"> {{ scope.row.money }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
-        <template>
-          <el-button size="mini" type="text" icon="el-icon-edit">编辑</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete">删除</el-button>
+        <template slot-scope="scope">
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">编辑</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleRemove(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
     <div class="block">
-      <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+      />
     </div>
 
     <!-- 添加或修改 -->
-    <el-dialog :title="title" :visible.sync="open" width="50%">
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入标签名称" />
+    <el-dialog :title="title" :visible.sync="open" width="40%">
+      <el-form ref="params" :model="params" :rules="rules" label-width="140px">
+        <el-form-item label="所属款式" prop="brand_id">
+          <el-select v-model="params.brand_id" filterable placeholder="请选择" value="">
+            <el-option
+              v-for="item in brandList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="下单人姓名" prop="buy_name">
+          <el-input v-model="params.buy_name" placeholder="请输入下单人姓名" clearable />
+        </el-form-item>
+        <el-form-item label="尺码" prop="size">
+          <el-input v-model="params.size" type="number" placeholder="请输入尺码" clearable />
+        </el-form-item>
+        <el-form-item label="下单人手机号" prop="mobile">
+          <el-input v-model="params.mobile" placeholder="请输入下单人手机号" clearable />
+        </el-form-item>
+        <el-form-item label="省/市/区">
+          <el-cascader v-model="params.province" :options="provinceList" @change="handleChange" />
+        </el-form-item>
+
+        <el-form-item label="详细地址" prop="address">
+          <el-input v-model="params.address" placeholder="不需要填写省市区" clearable />
+        </el-form-item>
+        <el-form-item label="快递" prop="ship">
+          <el-input v-model="params.ship" placeholder="请输入快递名称" clearable />
+        </el-form-item>
+        <el-form-item label="运单号" prop="ship_num">
+          <el-input v-model="params.ship_num" placeholder="请输入运单号" />
+        </el-form-item>
+        <el-form-item label="运费" prop="ship_fee">
+          <el-input v-model="params.ship_fee" type="number" placeholder="请输入运费" clearable />
+        </el-form-item>
+        <el-form-item label="入手价" prop="buy_price">
+          <el-input v-model="params.buy_price" type="number" placeholder="请输入入手价" clearable />
+        </el-form-item>
+        <el-form-item label="出售价" prop="sale_price">
+          <el-input v-model="params.sale_price" type="number" placeholder="请输入出售价" clearable />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -50,65 +117,104 @@
 </template>
 
 <script>
-import { fetchList } from '@/api/shoe'
+import { listShoe, getModel, addModel, updateModel, delModel } from '@/api/shoe'
+import { listBrand } from '@/api/brand'
+import { getArea } from '@/api/area'
+
 export default {
   data() {
     return {
-      modelList: [],
+      // 遮罩层
+      loading: false,
+      // 总条数
       total: 0,
+      // 复选框id
+      ids: [],
+      // 多选数据
+      multipleSelection: [],
+      // 查询参数
       queryParams: {
+        type: '',
+        keyword: '',
         pageNum: 1,
-        pageSize: 10
+        pageSize: 10,
+        sort: '',
+        order: ''
       },
       // 弹出层标题
       title: '',
       // 是否显示弹出层
       open: false,
+      // 列表
+      modelList: [],
+      // 省份列表
+      provinceList: [],
       // 表单参数
-      form: {},
+      params: {
+        id: '',
+        brand_id: '',
+        shop_type: '',
+        size: '',
+        buy_price: '',
+        sale_price: '',
+        ship_num: '',
+        ship_fee: '',
+        sale_time: '',
+        province: ''
+      },
       // 表单校验
       rules: {
-        name: [
-          { required: true, message: '标签不能为空', trigger: 'blur' }
-        ]
-      }
+        brand_id: [{ required: true, message: '请选择品牌', trigger: 'blur' }],
+        shop_type: [{ required: true, message: '请选择购入平台', trigger: 'blur' }],
+        size: [{ required: true, message: '请输入尺码', trigger: 'blur' }],
+        buy_price: [{ required: true, message: '请输入入手价', trigger: 'blur' }]
+      },
+      // 品牌类型
+      brandList: [],
+      // 平台列表
+      shopList: ['毒', 'nice', '绿叉', '斗牛', '淘宝', '其他']
     }
   },
   created() {
     this.getList()
+    this.getBrandList()
   },
   methods: {
     /** 查询列表 */
     getList() {
-      fetchList(this.queryParams).then(res => {
-        /* this.modelList = res.data.rows
-                    this.total = res.data.total*/
+      this.loading = true
+      listShoe(this.queryParams).then(res => {
+        this.modelList = res.data.rows
+        this.total = res.data.total
+        this.loading = false
       })
     },
-    // 格式化平台
-    formatType(row, column) {
-      if (row.shopType === 1) {
-        row.shopType = '毒'
-      }
-      if (row.shopType === 2) {
-        row.shopType = 'nice'
-      }
-      if (row.shopType === 3) {
-        row.shopType = '绿叉'
-      }
-      if (row.shopType === 4) {
-        row.shopType = '其他'
-      }
-      return row.shopType
+    /** 获取品牌信息 */
+    getBrandList() {
+      listBrand({ show: 'all' }).then(res => {
+        this.brandList = res.data.rows
+      })
     },
-    // 格式化盈亏
-    formatProfit(row) {
-      const profit = row.salePrice - row.buyPrice - row.shipFee
-      if (profit > 0) {
-        return '+' + profit
-      } else {
-        return '-' + profit
+    // 格式化出售价
+    formatSalePrice(row) {
+      if (row.sale_price === '0.00' || row.sale_price == null) {
+        row.sale_price = '未出售'
       }
+      return row.sale_price
+    },
+    // 格式化运费
+    formatShipFee(row) {
+      if (row.ship_fee === '0.00' || row.ship_fee == null) {
+        row.ship_fee = '无'
+      }
+      return row.ship_fee
+    },
+    // 格式化出售时间
+    formatSaleTime(row) {
+      if (!row.sale_time) {
+        row.sale_time = '无'
+      }
+      return row.sale_time
     },
     // 取消按钮
     cancel() {
@@ -117,20 +223,156 @@ export default {
     },
     // 表单重置
     reset() {
-      this.form = {
-        name: ''
+      this.params = {
+        id: '',
+        brand_id: '',
+        shop_type: '',
+        size: '',
+        buy_price: '',
+        sale_price: '',
+        ship_num: '',
+        ship_fee: '',
+        sale_time: ''
       }
-      this.resetForm('form')
+      this.resetForm('params')
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset()
+      // 获取省
+      var data = { type: 'province' }
+      getArea(data).then(res => {
+        if (res.code === 200) {
+          this.provinceList = res.data
+        }
+      })
       this.open = true
       this.title = '新增'
     },
+    /** 编辑按钮操作 */
+    handleUpdate(row) {
+      this.reset()
+      getModel(row.id).then(res => {
+        this.params = res.data
+        // 处理时间
+        if (this.params.sale_time) {
+          this.params.sale_time = new Date(this.params.sale_time * 1000)
+        }
+        this.open = true
+        this.title = '编辑'
+      })
+    },
+    /** 删除 */
+    handleRemove(row) {
+      this.$confirm('此操作将永久删除该数据, 是否继g续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        delModel({ id: row.id }).then(res => {
+          if (res.code === 200) {
+            this.getList()
+          }
+          this.$message.success(res.msg)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+
+    // 处理省市区
+    handleChange(val) {
+      console.log(val)
+    },
+
+    // 处理批量删除id选中
+    handleSelectionChange(val) {
+      this.multipleSelection = val
+    },
+    /** 删除全部 */
+    handleRemoveAll() {
+      this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 先清空ids
+        this.ids = []
+        const length = this.multipleSelection.length
+        for (let i = 0; i < length; i++) {
+          this.ids.push(this.multipleSelection[i].id)
+        }
+        if (this.ids.length <= 0) {
+          this.$message.error('请至少选择一条删除！')
+          return
+        }
+        // 数组转字符串
+        const ids = this.ids.join(',')
+        delModel({ id: ids }).then(res => {
+          if (res.code === 200) {
+            this.getList()
+          }
+          this.$message.success(res.msg)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
     /** 表单提交 */
     submitForm: function() {
+      this.$refs['params'].validate(valid => {
+        if (valid) {
+          if (this.params.sale_time) {
+            this.params.sale_time = Date.parse(this.params.sale_time)
+          }
+          if (this.params.id) {
+            updateModel(this.params).then(res => {
+              if (res.code === 200) {
+                this.$message.success(res.msg)
+                this.open = false
+                this.getList()
+              } else {
+                this.$message.error(res.msg)
+              }
+            })
+          } else {
+            addModel(this.params).then(res => {
+              if (res.code === 200) {
+                this.$message.success(res.msg)
+                this.open = false
+                this.getList()
+              } else {
+                this.$message.error(res.msg)
+              }
+            })
+          }
+        }
+      })
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1
+      this.getList()
+    },
+    /** 排序 */
+    handleSort(column) {
+      if (column.prop !== 'money') {
+        this.queryParams.sort = column.prop
 
+        if (column.order === 'descending') {
+          this.queryParams.order = 'desc'
+        } else {
+          this.queryParams.order = 'asc'
+        }
+        this.queryParams.pageNum = 1
+        this.getList()
+      }
     }
   }
 }
