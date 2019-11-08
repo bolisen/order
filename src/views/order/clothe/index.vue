@@ -6,11 +6,6 @@
         <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
 
-      <el-select v-model="queryParams.shop_type" placeholder="类型" size="small" value="">
-        <el-option label="全部" value="" />
-        <el-option v-for="item in shopList" :key="item" :label="item" :value="item" />
-      </el-select>
-
       <el-input
         v-model="queryParams.keyword"
         size="small"
@@ -18,7 +13,6 @@
         placeholder="品牌名称"
         @keyup.enter.native="handleQuery"
       />
-
       <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
     <el-table
@@ -30,22 +24,23 @@
       @sort-change="handleSort"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column type="index" label="序号 " width="50" align="center" />
+      <el-table-column type="index" label="序号 " width="50" align="center" sortable />
       <el-table-column prop="name" label="名称" align="center" sortable="custom" />
-      <el-table-column prop="size" label="尺码" align="center" width="80" sortable="custom" />
-      <el-table-column prop="shop_type" label="来源平台" align="center" sortable="custom" />
+      <el-table-column prop="buy_name" label="下单人" align="center" sortable="custom" />
+      <el-table-column prop="mobile" label="手机" align="center" sortable="custom" />
+      <el-table-column prop="address" label="地址" align="center" width="200" sortable="custom" />
+      <el-table-column prop="ship" label="快递" align="center" width="80" sortable="custom" />
+      <el-table-column prop="ship_num" label="运单编号" align="center" />
       <el-table-column prop="buy_price" label="入手价" align="center" sortable="custom" />
-      <el-table-column prop="create_time" label="入手时间" align="center" />
       <el-table-column prop="sale_price" label="出售价" align="center" :formatter="formatSalePrice" sortable="custom" />
       <el-table-column prop="ship_fee" label="运费" align="center" width="50" :formatter="formatShipFee" />
-      <el-table-column prop="ship_num" label="运单编号" align="center" />
-      <el-table-column prop="sale_time" label="出售时间" align="center" width="180" :formatter="formatSaleTime" />
       <el-table-column prop="money" label="盈亏" align="center" sortable>
         <template slot-scope="scope">
           <span v-if="scope.row.money>0" style="color: #fb0000"> {{ scope.row.money }}</span>
           <span v-else style="color: #2d891a"> {{ scope.row.money }}</span>
         </template>
       </el-table-column>
+      <el-table-column prop="create_time" label="下单时间" align="center" width="180" />
       <el-table-column label="操作" align="center" class-name="small-padding" width="160">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">编辑</el-button>
@@ -85,14 +80,16 @@
         <el-form-item label="下单人手机号" prop="mobile">
           <el-input v-model="params.mobile" placeholder="请输入下单人手机号" clearable />
         </el-form-item>
-        <el-form-item label="省/市/区">
-          <el-cascader v-model="params.province" :options="provinceList" @change="handleChange" />
+        <el-form-item label="入手价" prop="buy_price">
+          <el-input v-model="params.buy_price" type="number" placeholder="请输入入手价" clearable />
         </el-form-item>
-
+        <el-form-item label="省/市/区" prop="proCityArea">
+          <el-cascader v-model="params.proCityArea" filterable :options="provinceList" :props="props" style="width: 100%" />
+        </el-form-item>
         <el-form-item label="详细地址" prop="address">
           <el-input v-model="params.address" placeholder="不需要填写省市区" clearable />
         </el-form-item>
-        <el-form-item label="快递" prop="ship">
+        <el-form-item label="快递公司" prop="ship">
           <el-input v-model="params.ship" placeholder="请输入快递名称" clearable />
         </el-form-item>
         <el-form-item label="运单号" prop="ship_num">
@@ -100,9 +97,6 @@
         </el-form-item>
         <el-form-item label="运费" prop="ship_fee">
           <el-input v-model="params.ship_fee" type="number" placeholder="请输入运费" clearable />
-        </el-form-item>
-        <el-form-item label="入手价" prop="buy_price">
-          <el-input v-model="params.buy_price" type="number" placeholder="请输入入手价" clearable />
         </el-form-item>
         <el-form-item label="出售价" prop="sale_price">
           <el-input v-model="params.sale_price" type="number" placeholder="请输入出售价" clearable />
@@ -117,10 +111,9 @@
 </template>
 
 <script>
-import { listShoe, getModel, addModel, updateModel, delModel } from '@/api/shoe'
+import { listShoe, getModel, addModel, updateModel, delModel } from '@/api/clothe'
 import { listBrand } from '@/api/brand'
 import { getArea } from '@/api/area'
-
 export default {
   data() {
     return {
@@ -147,37 +140,86 @@ export default {
       open: false,
       // 列表
       modelList: [],
-      // 省份列表
-      provinceList: [],
       // 表单参数
       params: {
         id: '',
         brand_id: '',
-        shop_type: '',
+        buy_name: '',
+        mobile: '',
         size: '',
-        buy_price: '',
-        sale_price: '',
+        proCityArea: '',
+        address: '',
+        ship: '',
         ship_num: '',
         ship_fee: '',
-        sale_time: '',
-        province: ''
+        buy_price: '',
+        sale_price: ''
       },
       // 表单校验
       rules: {
         brand_id: [{ required: true, message: '请选择品牌', trigger: 'blur' }],
-        shop_type: [{ required: true, message: '请选择购入平台', trigger: 'blur' }],
+        buy_name: [{ required: true, message: '请输入下单人', trigger: 'blur' }],
         size: [{ required: true, message: '请输入尺码', trigger: 'blur' }],
-        buy_price: [{ required: true, message: '请输入入手价', trigger: 'blur' }]
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          {
+            validator: function(rule, value, callback) {
+              const reg = /^1(3|4|5|6|7|8)\d{9}$/
+              if (!reg.test(value)) {
+                callback(new Error('请输入正确的手机号！'))
+              } else {
+                callback()
+              }
+            },
+            trigger: 'blur'
+          }
+        ],
+        proCityArea: [{ required: true, message: '请选择省市区', trigger: 'blur' }],
+        buy_price: [
+          { required: true, message: '请输入入手价', trigger: 'blur' },
+          {
+            validator: function(rule, value, callback) {
+              const reg = /^[0-9]+(.[0-9]{2})?$/
+              if (!reg.test(value)) {
+                callback(new Error('请输入正确的价格！'))
+              } else {
+                callback()
+              }
+            },
+            trigger: 'blur'
+          }
+        ],
+        sale_price: [
+          {
+            validator: function(rule, value, callback) {
+              const reg = /^[0-9]+(.[0-9]{2})?$/
+              if (!reg.test(value)) {
+                callback(new Error('请输入正确的价格！'))
+              } else {
+                callback()
+              }
+            },
+            trigger: 'blur'
+          }
+        ],
+        address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
       },
       // 品牌类型
       brandList: [],
-      // 平台列表
-      shopList: ['毒', 'nice', '绿叉', '斗牛', '淘宝', '其他']
+      // 省份列表
+      provinceList: [],
+      props: {
+        label: 'name',
+        value: 'id',
+        children: 'children'
+      }
     }
   },
   created() {
     this.getList()
     this.getBrandList()
+    // 省份
+    this.getProvence()
   },
   methods: {
     /** 查询列表 */
@@ -239,13 +281,6 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset()
-      // 获取省
-      var data = { type: 'province' }
-      getArea(data).then(res => {
-        if (res.code === 200) {
-          this.provinceList = res.data
-        }
-      })
       this.open = true
       this.title = '新增'
     },
@@ -254,10 +289,6 @@ export default {
       this.reset()
       getModel(row.id).then(res => {
         this.params = res.data
-        // 处理时间
-        if (this.params.sale_time) {
-          this.params.sale_time = new Date(this.params.sale_time * 1000)
-        }
         this.open = true
         this.title = '编辑'
       })
@@ -282,12 +313,6 @@ export default {
         })
       })
     },
-
-    // 处理省市区
-    handleChange(val) {
-      console.log(val)
-    },
-
     // 处理批量删除id选中
     handleSelectionChange(val) {
       this.multipleSelection = val
@@ -328,9 +353,6 @@ export default {
     submitForm: function() {
       this.$refs['params'].validate(valid => {
         if (valid) {
-          if (this.params.sale_time) {
-            this.params.sale_time = Date.parse(this.params.sale_time)
-          }
           if (this.params.id) {
             updateModel(this.params).then(res => {
               if (res.code === 200) {
@@ -373,6 +395,14 @@ export default {
         this.queryParams.pageNum = 1
         this.getList()
       }
+    },
+
+    getProvence() {
+      getArea().then((res) => {
+        if (res.code === 200) {
+          this.provinceList = res.data
+        }
+      })
     }
   }
 }

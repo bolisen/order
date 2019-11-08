@@ -1,9 +1,12 @@
 import request from '@/utils/request'
 
-export function getArea(data) {
+/**
+ * 获取省市区列表
+ * @returns {AxiosPromise}
+ */
+export function getArea() {
   return request({
-    url: '/area/getAllList',
-    method: 'post',
-    data: data
+    url: '/area/getList',
+    method: 'post'
   })
 }
