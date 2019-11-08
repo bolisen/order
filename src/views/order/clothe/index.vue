@@ -24,7 +24,7 @@
       @sort-change="handleSort"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column type="index" label="序号 " width="50" align="center" sortable="custom" />
+      <el-table-column type="index" label="序号 " width="50" align="center" />
       <el-table-column prop="name" label="名称" align="center" sortable="custom" />
       <el-table-column prop="buy_name" label="下单人" align="center" sortable="custom" />
       <el-table-column prop="mobile" label="手机" align="center" sortable="custom" />
