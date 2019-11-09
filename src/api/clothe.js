@@ -5,7 +5,7 @@ import request from '@/utils/request'
  * @param query
  * @returns {AxiosPromise}
  */
-export function listShoe(query) {
+export function listClothe(query) {
   return request({
     url: '/clothe/getList',
     method: 'get',

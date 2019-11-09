@@ -5,14 +5,8 @@
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
         <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
-
-      <el-input
-        v-model="queryParams.keyword"
-        size="small"
-        style="width: 200px"
-        placeholder="品牌名称"
-        @keyup.enter.native="handleQuery"
-      />
+      <el-cascader v-model="queryParams.area" :options="provinceList" :props="props" filterable clearable />
+      <el-input v-model="queryParams.keyword" size="small" style="width: 200px" placeholder="按名称，姓名，手机号查找" @keyup.enter.native="handleQuery" />
       <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
     <el-table
@@ -83,8 +77,8 @@
         <el-form-item label="入手价" prop="buy_price">
           <el-input v-model="params.buy_price" type="number" placeholder="请输入入手价" clearable />
         </el-form-item>
-        <el-form-item label="省/市/区" prop="proCityArea">
-          <el-cascader v-model="params.proCityArea" filterable :options="provinceList" :props="props" style="width: 100%" />
+        <el-form-item label="省/市/区" prop="area">
+          <el-cascader v-model="params.area" filterable :options="provinceList" :props="props" style="width: 100%" />
         </el-form-item>
         <el-form-item label="详细地址" prop="address">
           <el-input v-model="params.address" placeholder="不需要填写省市区" clearable />
@@ -109,9 +103,8 @@
     </el-dialog>
   </div>
 </template>
-
 <script>
-import { listShoe, getModel, addModel, updateModel, delModel } from '@/api/clothe'
+import { listClothe, getModel, addModel, updateModel, delModel } from '@/api/clothe'
 import { listBrand } from '@/api/brand'
 import { getArea } from '@/api/area'
 export default {
@@ -127,7 +120,7 @@ export default {
       multipleSelection: [],
       // 查询参数
       queryParams: {
-        type: '',
+        area: [],
         keyword: '',
         pageNum: 1,
         pageSize: 10,
@@ -147,7 +140,7 @@ export default {
         buy_name: '',
         mobile: '',
         size: '',
-        proCityArea: '',
+        area: [],
         address: '',
         ship: '',
         ship_num: '',
@@ -174,7 +167,7 @@ export default {
             trigger: 'blur'
           }
         ],
-        proCityArea: [{ required: true, message: '请选择省市区', trigger: 'blur' }],
+        area: [{ required: true, message: '请选择省市区', trigger: 'blur' }],
         buy_price: [
           { required: true, message: '请输入入手价', trigger: 'blur' },
           {
@@ -225,7 +218,7 @@ export default {
     /** 查询列表 */
     getList() {
       this.loading = true
-      listShoe(this.queryParams).then(res => {
+      listClothe(this.queryParams).then(res => {
         this.modelList = res.data.rows
         this.total = res.data.total
         this.loading = false
@@ -268,13 +261,16 @@ export default {
       this.params = {
         id: '',
         brand_id: '',
-        shop_type: '',
+        buy_name: '',
+        mobile: '',
         size: '',
-        buy_price: '',
-        sale_price: '',
+        area: [],
+        address: '',
+        ship: '',
         ship_num: '',
         ship_fee: '',
-        sale_time: ''
+        buy_price: '',
+        sale_price: ''
       }
       this.resetForm('params')
     },
@@ -295,7 +291,7 @@ export default {
     },
     /** 删除 */
     handleRemove(row) {
-      this.$confirm('此操作将永久删除该数据, 是否继g续?', '提示', {
+      this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'

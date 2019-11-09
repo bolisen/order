@@ -5,14 +5,11 @@
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
         <el-button type="danger" size="mini" @click="handleRemoveAll">批量删除</el-button>
       </el-form-item>
-
       <el-select v-model="queryParams.shop_type" placeholder="类型" size="small" value="">
         <el-option label="全部" value="" />
         <el-option v-for="item in shopList" :key="item" :label="item" :value="item" />
       </el-select>
-
       <el-input v-model="queryParams.keyword" size="small" style="width: 200px" placeholder="品牌名称" @keyup.enter.native="handleQuery" />
-
       <el-button type="primary" size="mini" @click="handleQuery">查询</el-button>
     </el-form>
     <el-table ref="multipleTable" :data="modelList" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" @sort-change="handleSort">
