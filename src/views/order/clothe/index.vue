@@ -1,5 +1,10 @@
 <template>
   <div class="app-container">
+    <el-row>
+      <el-col :span="8"><el-card shadow="always">总是显示</el-card></el-col>
+      <el-col :span="8"><el-card shadow="always">总是显示</el-card></el-col>
+      <el-col :span="8"><el-card shadow="always">总是显示</el-card></el-col>
+    </el-row>
     <el-form :inline="true" label-width="68px">
       <el-form-item>
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
