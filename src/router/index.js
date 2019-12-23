@@ -106,7 +106,7 @@ export const asyncRoutes = [
         component: () => import('@/views/system/menu'),
         name: '菜单管理',
         meta: { title: '菜单管理', icon: 'user' }
-      },
+      }
     ]
   },
   {
@@ -142,7 +142,7 @@ export const asyncRoutes = [
 ]
 
 const createRouter = () => new Router({
-  mode: 'history', // require service support
+  // mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })
