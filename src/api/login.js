@@ -1,8 +1,9 @@
 import request from '@/utils/request'
 
+// 登录
 export function doLogin(data) {
   return request({
-    url: '/login/doLogin',
+    url: '/back/login/doLogin',
     method: 'post',
     data: data
   })
@@ -11,14 +12,15 @@ export function doLogin(data) {
 // 获取用户详细信息
 export function getInfo() {
   return request({
-    url: '/login/getInfo',
+    url: '/back/login/getInfo',
     method: 'get'
   })
 }
 
+// 退出登录
 export function logout() {
   return request({
-    url: '/login/logout',
+    url: '/back/login/logout',
     method: 'post'
   })
 }
